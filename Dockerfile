@@ -16,20 +16,27 @@ RUN LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygi
 
 RUN apt-get update && apt-get install -y lua5.1 nodejs npm ripgrep
 
+# Get nvim dependencies
 RUN apt-get update && \
-    curl -Lo nvim-linux64.tar.gz https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz && \ 
-    tar xf nvim-linux64.tar.gz && ln -s nvim-linux64/bin/nvim /usr/bin/nvim && ln -s nvim-linux64/bin/nvim /usr/local/bin/nvim
+    apt-get install -y ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen 
 
-RUN echo "export PATH=nvim-linux64/bin/nvim:$PATH" >> ~/.bashrc
+# Install neovim from source
+RUN git clone https://github.com/neovim/neovim && cd neovim && git checkout stable && \
+    make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$HOME/neovim"  && \
+    make install && \
+    export PATH="$HOME/neovim/bin:$PATH"
 
+#RUN echo "export PATH=nvim-linux64/bin/nvim:$PATH" >> ~/.bashrc
+
+# Copy over files
 COPY . /tmp
 
-RUN mkdir ~/.config/
+#RUN mkdir ~/.config/
 
-RUN cp -r /tmp/nvim ~/.config/nvim && \
+RUN git clone https://github.com/AstroNvim/AstroNvim ~/.config/nvim && \
   # Uncomment the line below and replace the link with your user config repo to load a user config
   # git clone https://github.com/username/AstroNvim_user ~/.config/nvim/lua/user
-  nvim-linux64/bin/nvim --headless -c "autocmd User PackerComplete quitall"
+  ~/neovim/bin/nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
 
 # Install pip for Python 3
@@ -40,6 +47,8 @@ RUN apt-get update && \
 # Install the python packages from requirements.txt
 COPY requirements.txt /tmp/
 RUN pip3 install -r /tmp/requirements.txt
+
+RUN npm install -g pyright
 
 # Set neovim as the default editor
 ENV EDITOR=nvim
