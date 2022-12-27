@@ -14,9 +14,11 @@ Then you just need to build the Dockerfile and run nvim through bash in the dock
 First you need to build the docker container and tag it
 1. docker build  -t docker_python_lsp .
 
-Then it is a matter of running the docker container shell with the right volumes you want to access and make sure the Display environment is set:
+Then it is a matter of running the docker container shell with the right volumes you want to access and make sure the Display environment is set
+
 2. docker run -it  -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /home/joakim/Documents/docker_python_lsp:/tmp docker_python_lsp
 
 Finally, just run nvim to enter neovim from within the Docker container
+
 3. nvim .
 
